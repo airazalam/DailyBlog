@@ -1,16 +1,31 @@
-//jshint esversion:6
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ =require("lodash");
-const posts= [];
+const clickedPostTitle= "";
+const clickedPostContent= "";
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
 const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
 const app = express();
+mongoose.connect("mongodb+srv://airaz_alam:3aiMzUppp1JLADvf@cluster0.jzretlj.mongodb.net/blogDB")
+.then(() => {
+    console.info('connected successfully')  
+})
+.catch(() => {
+    console.error('connection error');
+});
+
+const postsSchema = {
+    title: String,
+    content: String
+};
+const Post = mongoose.model("Post",postsSchema);
+
 
 app.set('view engine', 'ejs');
 
@@ -19,8 +34,17 @@ app.use(express.static("public"));
 
 
 app.get("/",function(req,res){
+
+  async function getData () {
+     
+    const posts=await Post.find({});
+    
+    res.render("home",{content:homeStartingContent,postList:posts});
+   
+};
+getData();
   
-  res.render("home",{content:homeStartingContent,postList:posts});
+  
   
 });
 
@@ -36,26 +60,45 @@ app.get("/compose",function(req,res){
 });
 
 app.post("/compose",function(req,res){
-  const post={ title:req.body.postTitle, content:req.body.postContent };
-  posts.push(post);
-  res.redirect("/");
+  const postTitle = req.body.postTitle;
+   const postContent = req.body.postContent;
+  const post= new Post({
+    title: postTitle,
+    content: postContent
+
 });
 
+  post.save(function(err){
 
-app.get("/posts/:postName",function(req,res){
-  const requestedTitle = _.lowerCase(req.params.postName);
-
-  posts.forEach(function(posts){
-    const storedTitle = _.lowerCase(posts.title);
-    if(storedTitle === requestedTitle){
-      res.render("post",{title:posts.title ,content:posts.content});
-      
+    if (!err){
+ 
+      res.redirect("/");
+ 
     }
-
+ 
   });
-  
-  
 });
+
+
+app.get("/posts/:postId",function(req,res){
+  const requestedpostId= req.params.postId;
+
+  async function getData () {
+     
+    const post=await Post.findOne({_id:requestedpostId});
+    
+    res.render("post",{title:post.title ,content:post.content});
+   
+};
+getData();
+      
+      
+});
+
+  
+  
+  
+
 
 
 

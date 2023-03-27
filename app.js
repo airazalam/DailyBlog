@@ -68,15 +68,12 @@ app.post("/compose",function(req,res){
 
 });
 
-  post.save(function(err){
-
-    if (!err){
- 
-      res.redirect("/");
- 
-    }
- 
-  });
+  post.save().then(() => {
+    res.redirect("/");
+})
+.catch(() => {
+    console.error('connection error');
+});
 });
 
 
